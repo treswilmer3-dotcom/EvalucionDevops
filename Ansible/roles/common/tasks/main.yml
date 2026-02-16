@@ -1,0 +1,44 @@
+---
+# Tareas comunes para todos los nodos
+
+- name: Actualizar sistema
+  yum:
+    name: '*'
+    state: latest
+    update_only: yes
+  when: ansible_os_family == "RedHat"
+
+- name: Actualizar sistema (Debian/Ubuntu)
+  apt:
+    update_cache: yes
+    upgrade: dist
+  when: ansible_os_family == "Debian"
+
+- name: Instalar herramientas básicas
+  package:
+    name:
+      - git
+      - vim
+      - curl
+      - wget
+      - htop
+      - tree
+      - unzip
+    state: present
+
+- name: Crear directorio de logs
+  file:
+    path: /var/log/laboratorio
+    state: directory
+    mode: '0755'
+
+- name: Configurar timezone
+  timezone:
+    name: America/New_York
+
+- name: Optimizar límites de sistema
+  lineinfile:
+    path: /etc/security/limits.conf
+    line: '* soft nofile 65536'
+    create: yes
+  notify: restart system
