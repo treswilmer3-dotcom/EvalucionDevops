@@ -1,0 +1,60 @@
+# Git
+.git
+.gitignore
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars.backup
+
+# SSH Keys
+*.pem
+id_rsa*
+known_hosts
+
+# AWS Credentials
+.aws/
+.aws-credentials
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Documentation
+README.md
+*.md
+
+# Scripts not needed in container
+deploy.sh
+destroy.sh
+
+# Local configuration
+local.yml
+local_vars.yml

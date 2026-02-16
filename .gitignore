@@ -1,0 +1,78 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform.tfvars.backup
+
+# Ansible
+*.retry
+inventory.ini
+inventory_*.ini
+
+# SSH Keys
+*.pem
+id_rsa*
+known_hosts
+
+# AWS Credentials
+.aws/
+.aws-credentials
+*.pem
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Docker
+!.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Terraform plan files
+*.plan
+
+# Backup files
+*.bak
+*.backup
+
+# Local configuration
+local.yml
+local_vars.yml
+
+# Terraform provider cache
+.terraform/providers/
+
+# Terraform crash logs
+.terraform.crash.*
+
+# Terraform lock files
+.terraform.tflock
