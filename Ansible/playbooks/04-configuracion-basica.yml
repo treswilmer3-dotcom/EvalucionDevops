@@ -89,22 +89,17 @@
           ==========================================
           ✅ Configuración básica finalizada
       
-    # Tarea 4: Instalar herramientas básicas de administración
-    - name: Instalar herramientas de administración básicas
+    # Tarea 4: Instalar herramienta de red
+    - name: Instalar nmap para análisis de red
       yum:
-        name:
-          - vim
-          - curl
-          - wget
-          - tree
-          - git
+        name: nmap
         state: present
       when: ansible_os_family == "RedHat"
-      register: tools_install
+      register: nmap_install
       
-    - name: Mostrar instalación de herramientas
+    - name: Mostrar instalación de nmap
       debug:
-        msg: "🛠️  Herramientas instaladas: {{ 'Sí' if tools_install.changed else 'Ya existían' }}"
+        msg: "🛠️  Nmap instalado: {{ 'Sí' if nmap_install.changed else 'Ya existía' }}"
       
     # Tarea 5: Crear archivo de configuración para referencia
     - name: Crear archivo de configuración del laboratorio
@@ -152,5 +147,5 @@
              - terminal-4 → terminal4
           
           ✅ Sistemas actualizados
-          ✅ Herramientas de administración instaladas
+          ✅ Nmap instalado para análisis de red
           ✅ Archivos de configuración creados
