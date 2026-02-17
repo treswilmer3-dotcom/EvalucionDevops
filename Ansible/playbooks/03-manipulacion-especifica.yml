@@ -1,0 +1,196 @@
+---
+- name: Manipulación específica - Update Terminal-2 y Apache Terminal-4
+  hosts: terminal-2,terminal-4
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Mostrar objetivo del playbook
+      debug:
+        msg: "🎯 Ejecutando tareas específicas en: {{ ansible_hostname }}"
+      
+    # Tareas para Terminal-2
+    - name: Tareas específicas para Terminal-2
+      block:
+        - name: Identificar Terminal-2
+          debug:
+            msg: "🔄 Terminal-2: Ejecutando actualización completa del sistema"
+          when: inventory_hostname == "terminal-2"
+          
+        - name: Actualizar todos los paquetes del sistema
+          yum:
+            name: '*'
+            state: latest
+          when: inventory_hostname == "terminal-2"
+          register: update_result
+          
+        - name: Mostrar resultado de actualización
+          debug:
+            msg: "✅ Terminal-2: Actualización completada - {{ update_result.results | length }} paquetes procesados"
+          when: inventory_hostname == "terminal-2"
+          
+        - name: Verificar kernel después de update
+          command: uname -r
+          register: kernel_version
+          when: inventory_hostname == "terminal-2"
+          
+        - name: Mostrar versión del kernel
+          debug:
+            msg: "🔧 Terminal-2: Kernel actual - {{ kernel_version.stdout }}"
+          when: inventory_hostname == "terminal-2"
+          
+        - name: Instalar herramientas de monitoreo
+          yum:
+            name:
+              - htop
+              - iotop
+              - nethogs
+              - sysstat
+            state: present
+          when: inventory_hostname == "terminal-2"
+          
+        - name: Crear reporte de sistema
+          copy:
+            content: |
+              📋 REPORTE DE SISTEMA - TERMINAL-2
+              =====================================
+              🖥️  Hostname: {{ ansible_hostname }}
+              🌐 IP: {{ ansible_default_ipv4.address }}
+              💾 OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+              🧠 RAM: {{ ansible_memtotal_mb }}MB
+              ⚡ CPU: {{ ansible_processor_cores }} cores
+              🔧 Kernel: {{ kernel_version.stdout }}
+              📅 Actualización: {{ ansible_date_time.iso8601 }}
+              📊 Espacio disco: {{ ansible_mounts[0].size_available | int // 1024 // 1024 }}MB disponible
+              =====================================
+              ✅ Actualización completada exitosamente
+            dest: /root/reporte_terminal2.txt
+          when: inventory_hostname == "terminal-2"
+      
+    # Tareas para Terminal-4
+    - name: Tareas específicas para Terminal-4
+      block:
+        - name: Identificar Terminal-4
+          debug:
+            msg: "🌐 Terminal-4: Instalando servidor Apache avanzado"
+          when: inventory_hostname == "terminal-4"
+          
+        - name: Instalar Apache y módulos adicionales
+          yum:
+            name:
+              - httpd
+              - httpd-devel
+              - mod_ssl
+              - php
+              - php-mysqlnd
+              - php-gd
+              - php-xml
+              - php-mbstring
+            state: present
+          when: inventory_hostname == "terminal-4"
+          
+        - name: Configurar Apache para rendimiento
+          lineinfile:
+            path: /etc/httpd/conf/httpd.conf
+            regexp: "{{ item.regexp }}"
+            line: "{{ item.line }}"
+            backup: yes
+          loop:
+            - { regexp: '^KeepAlive', line: 'KeepAlive On' }
+            - { regexp: '^MaxKeepAliveRequests', line: 'MaxKeepAliveRequests 100' }
+            - { regexp: '^KeepAliveTimeout', line: 'KeepAliveTimeout 5' }
+            - { regexp: '^ServerTokens', line: 'ServerTokens Prod' }
+            - { regexp: '^ServerSignature', line: 'ServerSignature Off' }
+          when: inventory_hostname == "terminal-4"
+          
+        - name: Crear página avanzada para Terminal-4
+          copy:
+            content: |
+              <!DOCTYPE html>
+              <html>
+              <head>
+                  <title>Terminal-4 - Servidor Apache Avanzado</title>
+                  <style>
+                      body { font-family: 'Courier New', monospace; background: #1a1a1a; color: #00ff00; text-align: center; padding: 40px; }
+                      .container { background: rgba(0,255,0,0.1); border: 2px solid #00ff00; padding: 30px; border-radius: 15px; }
+                      h1 { font-size: 2.5em; text-shadow: 0 0 10px #00ff00; }
+                      .info { font-size: 1.1em; margin: 15px 0; color: #00ff00; }
+                      .status { background: rgba(0,255,0,0.2); padding: 10px; margin: 10px 0; border-radius: 5px; }
+                  </style>
+              </head>
+              <body>
+                  <div class="container">
+                      <h1>🚀 TERMINAL-4 - APACHE AVANZADO</h1>
+                      <div class="status">🌐 Servidor Apache con SSL y PHP</div>
+                      <div class="info">🖥️  Servidor: {{ ansible_hostname }}</div>
+                      <div class="info">🌐 IP: {{ ansible_default_ipv4.address }}</div>
+                      <div class="info">📅 Desplegado: {{ ansible_date_time.date }}</div>
+                      <div class="info">⏰ Hora: {{ ansible_date_time.time }}</div>
+                      <div class="info">💾 Versión Apache: Configurado para producción</div>
+                      <div class="info">🔒 SSL: Habilitado</div>
+                      <div class="info">🐘 PHP: Instalado y configurado</div>
+                      <div class="status">✅ Servidor optimizado para alto rendimiento</div>
+                  </div>
+              </body>
+              </html>
+            dest: /var/www/html/index.html
+            owner: apache
+            group: apache
+            mode: '0644'
+          when: inventory_hostname == "terminal-4"
+          
+        - name: Iniciar y habilitar Apache
+          systemd:
+            name: httpd
+            state: started
+            enabled: yes
+          when: inventory_hostname == "terminal-4"
+          
+        - name: Configurar firewall para Apache y SSL
+          firewalld:
+            service: "{{ item }}"
+            state: enabled
+            permanent: yes
+            immediate: yes
+          loop:
+            - http
+            - https
+          when: ansible_os_family == "RedHat" and inventory_hostname == "terminal-4"
+          
+        - name: Verificar configuración Apache
+          command: apachectl configtest
+          register: config_test
+          when: inventory_hostname == "terminal-4"
+          
+        - name: Mostrar resultado de configuración
+          debug:
+            msg: "🔍 Configuración Apache: {{ '✅ CORRECTA' if config_test.rc == 0 else '❌ ERROR - ' + config_test.stderr }}"
+          when: inventory_hostname == "terminal-4"
+          
+        - name: Reiniciar Apache
+          systemd:
+            name: httpd
+            state: restarted
+          when: inventory_hostname == "terminal-4"
+          
+        - name: Verificar estado final de Apache
+          uri:
+            url: http://localhost
+            method: GET
+          register: final_test
+          when: inventory_hostname == "terminal-4"
+          
+        - name: Mostrar estado final
+          debug:
+            msg: "🎉 Terminal-4 Apache: {{ '✅ TOTALMENTE FUNCIONAL' if final_test.status == 200 else '❌ PROBLEMAS' }}"
+          when: inventory_hostname == "terminal-4"
+
+    - name: Resumen final de ejecución
+      debug:
+        msg: |
+          🎯 PLAYBOOK COMPLETADO
+          ==========================================
+          🔄 Terminal-2: Sistema actualizado + herramientas de monitoreo
+          🌐 Terminal-4: Apache avanzado + SSL + PHP configurado
+          ==========================================
+          ✅ Todas las tareas ejecutadas exitosamente

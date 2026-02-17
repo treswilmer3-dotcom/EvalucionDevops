@@ -1,0 +1,48 @@
+---
+- name: Validar comunicación entre todos los nodos
+  hosts: all
+  gather_facts: yes
+  
+  tasks:
+    - name: Test de conectividad SSH
+      ping:
+      
+    - name: Mostrar información de cada nodo
+      debug:
+        msg: |
+          ==========================================
+          🖥️  NODO: {{ ansible_hostname }}
+          🌐 IP: {{ ansible_default_ipv4.address }}
+          💾 OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          🧠 RAM: {{ ansible_memtotal_mb }}MB
+          ⚡ CPU: {{ ansible_processor_cores }} cores
+          📍 Arquitectura: {{ ansible_architecture }}
+          ==========================================
+      
+    - name: Verificar conectividad a internet
+      uri:
+        url: https://httpbin.org/ip
+        method: GET
+        timeout: 10
+      register: internet_check
+      ignore_errors: yes
+      
+    - name: Mostrar estado de internet
+      debug:
+        msg: "🌍 Internet: {{ '✅ CONECTADO' if internet_check.status == 200 else '❌ SIN CONEXIÓN' }}"
+      
+    - name: Verificar espacio en disco
+      shell: df -h /
+      register: disk_space
+      
+    - name: Mostrar espacio en disco
+      debug:
+        msg: "💾 Disco: {{ disk_space.stdout_lines[1] }}"
+      
+    - name: Verificar uptime del sistema
+      command: uptime
+      register: uptime_result
+      
+    - name: Mostrar uptime
+      debug:
+        msg: "⏰ Uptime: {{ uptime_result.stdout }}"

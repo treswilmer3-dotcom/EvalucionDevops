@@ -1,0 +1,106 @@
+---
+- name: Instalar Apache en todas las terminales
+  hosts: terminales
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Mostrar nodo actual
+      debug:
+        msg: "🔧 Configurando Apache en: {{ ansible_hostname }} ({{ ansible_default_ipv4.address }})"
+      
+    - name: Actualizar repositorios
+      yum:
+        update_cache: yes
+        update_only: yes
+      when: ansible_os_family == "RedHat"
+      
+    - name: Instalar Apache HTTP Server
+      yum:
+        name: httpd
+        state: present
+        
+    - name: Instalar herramientas adicionales
+      yum:
+        name:
+          - curl
+          - wget
+          - unzip
+        state: present
+        
+    - name: Iniciar y habilitar servicio Apache
+      systemd:
+        name: httpd
+        state: started
+        enabled: yes
+        
+    - name: Configurar firewall para Apache
+      firewalld:
+        service: http
+        state: enabled
+        permanent: yes
+        immediate: yes
+      when: ansible_os_family == "RedHat"
+      
+    - name: Abrir puerto 80 en firewall
+      firewalld:
+        port: 80/tcp
+        state: enabled
+        permanent: yes
+        immediate: yes
+      when: ansible_os_family == "RedHat"
+      
+    - name: Crear página de bienvenida personalizada
+      copy:
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Laboratorio Ansible - {{ ansible_hostname }}</title>
+              <style>
+                  body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 50px; }
+                  .container { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 10px; }
+                  h1 { font-size: 3em; margin-bottom: 20px; }
+                  .info { font-size: 1.2em; margin: 10px 0; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🚀 Laboratorio Ansible</h1>
+                  <div class="info">🖥️ Servidor: {{ ansible_hostname }}</div>
+                  <div class="info">🌐 IP: {{ ansible_default_ipv4.address }}</div>
+                  <div class="info">📅 Fecha: {{ ansible_date_time.date }}</div>
+                  <div class="info">⏰ Hora: {{ ansible_date_time.time }}</div>
+                  <div class="info">💾 OS: {{ ansible_distribution }} {{ ansible_distribution_version }}</div>
+                  <div class="info">⚡ Uptime: {{ ansible_uptime_seconds }} segundos</div>
+              </div>
+          </body>
+          </html>
+        dest: /var/www/html/index.html
+        owner: apache
+        group: apache
+        mode: '0644'
+        
+    - name: Reiniciar Apache para aplicar cambios
+      systemd:
+        name: httpd
+        state: restarted
+        
+    - name: Verificar estado de Apache
+      systemd:
+        name: httpd
+      register: apache_status
+      
+    - name: Mostrar estado de Apache
+      debug:
+        msg: "🌐 Apache: {{ '✅ ACTIVO' if apache_status.status.ActiveState == 'active' else '❌ INACTIVO' }}"
+        
+    - name: Probar Apache localmente
+      uri:
+        url: http://localhost
+        method: GET
+      register: local_test
+      
+    - name: Mostrar resultado de prueba local
+      debug:
+        msg: "🔍 Prueba local Apache: {{ '✅ FUNCIONA' if local_test.status == 200 else '❌ ERROR' }}"

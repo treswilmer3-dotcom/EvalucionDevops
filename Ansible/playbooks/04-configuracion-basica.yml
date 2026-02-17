@@ -1,0 +1,156 @@
+---
+- name: Configuración básica de terminales - Hostname y actualización
+  hosts: terminales
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Mostrar objetivo del playbook
+      debug:
+        msg: "🎯 Configurando: {{ inventory_hostname }} - Hostname y actualización del sistema"
+      
+    # Tarea 1: Configuración de hostname usando módulos nativos
+    - name: Configurar hostname en terminal-1
+      hostname:
+        name: terminal1
+      when: inventory_hostname == "terminal-1"
+      
+    - name: Configurar hostname en terminal-2
+      hostname:
+        name: terminal2
+      when: inventory_hostname == "terminal-2"
+      
+    - name: Configurar hostname en terminal-3
+      hostname:
+        name: terminal3
+      when: inventory_hostname == "terminal-3"
+      
+    - name: Configurar hostname en terminal-4
+      hostname:
+        name: terminal4
+      when: inventory_hostname == "terminal-4"
+      
+    - name: Mostrar cambio de hostname
+      debug:
+        msg: "🖥️  Hostname cambiado a: {{ ansible_hostname }}"
+      
+    # Tarea 2: Actualización del sistema usando módulo yum (idempotente)
+    - name: Actualizar repositorios del sistema
+      yum:
+        update_cache: yes
+      when: ansible_os_family == "RedHat"
+      register: repo_update
+      
+    - name: Mostrar estado de actualización de repos
+      debug:
+        msg: "📦 Repositorios: {{ 'Actualizados' if repo_update.changed else 'Sin cambios' }}"
+      
+    - name: Actualizar todos los paquetes del sistema
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_os_family == "RedHat"
+      register: system_update
+      
+    - name: Mostrar resultado de actualización
+      debug:
+        msg: "🔄 Sistema actualizado: {{ 'Sí' if system_update.changed else 'No actualizaciones necesarias' }}"
+      
+    # Tarea 3: Verificación post-configuración
+    - name: Verificar hostname actual
+      command: hostname
+      register: current_hostname
+      changed_when: false
+      
+    - name: Mostrar hostname configurado
+      debug:
+        msg: "✅ Hostname verificado: {{ current_hostname.stdout }}"
+      
+    - name: Verificar información del sistema post-actualización
+      setup:
+        gather_subset:
+          - distribution
+          - hardware
+      register: system_info
+      
+    - name: Mostrar resumen de configuración
+      debug:
+        msg: |
+          📋 RESUMEN DE CONFIGURACIÓN - {{ current_hostname.stdout }}
+          ==========================================
+          🖥️  Hostname: {{ current_hostname.stdout }}
+          🌐 IP: {{ ansible_default_ipv4.address }}
+          💾 OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          🧠 RAM: {{ ansible_memtotal_mb }}MB
+          ⚡ CPU: {{ ansible_processor_cores }} cores
+          🔄 Actualización: {{ 'Completada' if system_update.changed else 'No requerida' }}
+          📅 Fecha: {{ ansible_date_time.date }}
+          ⏰ Hora: {{ ansible_date_time.time }}
+          ==========================================
+          ✅ Configuración básica finalizada
+      
+    # Tarea 4: Instalar herramientas básicas de administración
+    - name: Instalar herramientas de administración básicas
+      yum:
+        name:
+          - vim
+          - curl
+          - wget
+          - tree
+          - git
+        state: present
+      when: ansible_os_family == "RedHat"
+      register: tools_install
+      
+    - name: Mostrar instalación de herramientas
+      debug:
+        msg: "🛠️  Herramientas instaladas: {{ 'Sí' if tools_install.changed else 'Ya existían' }}"
+      
+    # Tarea 5: Crear archivo de configuración para referencia
+    - name: Crear archivo de configuración del laboratorio
+      copy:
+        content: |
+          # CONFIGURACIÓN LABORATORIO ANSIBLE
+          # ==========================================
+          # Hostname: {{ current_hostname.stdout }}
+          # IP: {{ ansible_default_ipv4.address }}
+          # OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          # Configurado por: Ansible
+          # Fecha: {{ ansible_date_time.iso8601 }}
+          # Playbook: 03-configuracion-basica.yml
+          # ==========================================
+          # Este archivo indica que la configuración básica
+          # del laboratorio ha sido aplicada exitosamente.
+        dest: /etc/ansible-lab-configured
+        owner: root
+        group: root
+        mode: '0644'
+      
+    - name: Verificar archivo de configuración
+      stat:
+        path: /etc/ansible-lab-configured
+      register: config_file
+      
+    - name: Confirmar archivo de configuración
+      debug:
+        msg: "📄 Archivo de configuración creado: {{ config_file.stat.path }}"
+
+- name: Resumen final del playbook
+  hosts: localhost
+  gather_facts: no
+  
+  tasks:
+    - name: Mostrar resumen completo
+      debug:
+        msg: |
+          🎉 PLAYBOOK 3 COMPLETADO
+          ==========================================
+          ✅ Hostnames configurados:
+             - terminal-1 → terminal1
+             - terminal-2 → terminal2  
+             - terminal-3 → terminal3
+             - terminal-4 → terminal4
+          
+          ✅ Sistemas actualizados
+          ✅ Herramientas de administración instaladas
+          ✅ Archivos de configuración creados
